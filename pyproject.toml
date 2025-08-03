@@ -28,4 +28,5 @@ packages = [{include = "agent"}]
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.12.7"
 pre-commit = "^4.2.0"
+langgraph-cli = {extras = ["inmem"], version = "^0.3.6"}
 
