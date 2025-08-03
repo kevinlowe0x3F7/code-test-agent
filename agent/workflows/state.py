@@ -9,6 +9,7 @@ class WorkflowPhase(Enum):
     INITIAL = "initial"
     TEST_GENERATION = "test_generation"
     CODE_VALIDATION = "code_validation"
+    PR_SUBMISSION = "pr_submission"
     ERROR = "error"
     COMPLETED = "completed"
 

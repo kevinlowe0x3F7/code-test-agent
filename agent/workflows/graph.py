@@ -5,7 +5,9 @@ from agent.workflows.nodes.test_generation import (
 from agent.workflows.nodes.tool_execution import TOOL_EXECUTION_NODE, tool_execution
 from agent.workflows.nodes.code_validation import CODE_VALIDATION_NODE, code_validation
 from agent.workflows.nodes.error_handler import ERROR_HANDLER_NODE, error_handler
+from agent.workflows.nodes.pr_submission import PR_SUBMISSION_NODE, pr_submission
 from agent.workflows.routing import (
+    route_after_pr_submission,
     route_after_test_generation,
     route_after_tool_execution,
     route_after_code_validation,
@@ -19,6 +21,7 @@ graph_builder.add_node(TEST_GENERATION_NODE, test_generation)
 graph_builder.add_node(TOOL_EXECUTION_NODE, tool_execution)
 graph_builder.add_node(CODE_VALIDATION_NODE, code_validation)
 graph_builder.add_node(ERROR_HANDLER_NODE, error_handler)
+graph_builder.add_node(PR_SUBMISSION_NODE, pr_submission)
 
 graph_builder.add_edge(START, TEST_GENERATION_NODE)
 
@@ -28,6 +31,17 @@ graph_builder.add_conditional_edges(
     {
         TOOL_EXECUTION_NODE: TOOL_EXECUTION_NODE,
         CODE_VALIDATION_NODE: CODE_VALIDATION_NODE,
+        ERROR_HANDLER_NODE: ERROR_HANDLER_NODE,
+        END: END,
+    },
+)
+
+graph_builder.add_conditional_edges(
+    CODE_VALIDATION_NODE,
+    route_after_code_validation,
+    {
+        TOOL_EXECUTION_NODE: TOOL_EXECUTION_NODE,
+        PR_SUBMISSION_NODE: PR_SUBMISSION_NODE,
         ERROR_HANDLER_NODE: ERROR_HANDLER_NODE,
         END: END,
     },
@@ -45,11 +59,10 @@ graph_builder.add_conditional_edges(
 )
 
 graph_builder.add_conditional_edges(
-    CODE_VALIDATION_NODE,
-    route_after_code_validation,
+    PR_SUBMISSION_NODE,
+    route_after_pr_submission,
     {
         ERROR_HANDLER_NODE: ERROR_HANDLER_NODE,
-        TOOL_EXECUTION_NODE: TOOL_EXECUTION_NODE,
         END: END,
     },
 )
