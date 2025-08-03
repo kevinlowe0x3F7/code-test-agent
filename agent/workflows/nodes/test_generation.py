@@ -6,10 +6,10 @@ from agent.workflows.state import State, WorkflowPhase
 from agent.models.anthropic import anthropic_model
 from pathlib import Path
 
-LLM_TEST_GENERATOR_NODE = "llm_test_generator"
+TEST_GENERATION_NODE = "test_generation"
 
 
-def llm_test_generator(state: State):
+def test_generation(state: State):
     llm_with_tools = anthropic_model.bind_tools(get_all_tools())
 
     file_path = state.target_file_path
@@ -28,7 +28,7 @@ def llm_test_generator(state: State):
 
         response = llm_with_tools.invoke(messages)
 
-        print(f"Got response in llm_test_generator with added prompts: {response}")
+        print(f"Got response in test_generation with added prompts: {response}")
         return {
             "messages": [*messages, response],
             "current_phase": WorkflowPhase.TEST_GENERATION,
@@ -38,7 +38,7 @@ def llm_test_generator(state: State):
         # We're in tool loop - continue conversation
         response = llm_with_tools.invoke(state.messages)
 
-        print(f"Got response in llm_test_generator in tool loop: {response}")
+        print(f"Got response in test_generation in tool loop: {response}")
         return {"messages": [response], "current_phase": WorkflowPhase.TEST_GENERATION}
 
 

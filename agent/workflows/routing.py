@@ -1,13 +1,13 @@
 from agent.workflows.nodes.code_validation import CODE_VALIDATION_NODE
 from agent.workflows.nodes.error_handler import ERROR_HANDLER_NODE
 from agent.workflows.nodes.tool_execution import TOOL_EXECUTION_NODE
-from agent.workflows.nodes.llm_test_generator import LLM_TEST_GENERATOR_NODE
+from agent.workflows.nodes.test_generation import TEST_GENERATION_NODE
 from agent.workflows.state import State, WorkflowPhase
 from langgraph.graph import END
 
 
-def route_after_llm_test_generator(state: State):
-    """Route after LLM test generator node"""
+def route_after_test_generation(state: State):
+    """Route after test generation node"""
     if state.current_phase == WorkflowPhase.ERROR:
         return ERROR_HANDLER_NODE
     elif (
@@ -31,7 +31,7 @@ def route_after_tool_execution(state: State):
         return ERROR_HANDLER_NODE
 
     if state.current_phase == WorkflowPhase.TEST_GENERATION:
-        return LLM_TEST_GENERATOR_NODE
+        return TEST_GENERATION_NODE
     if state.current_phase == WorkflowPhase.CODE_VALIDATION:
         return CODE_VALIDATION_NODE
 
