@@ -44,6 +44,5 @@ def commit_test_file(
     return {
         "hash": commit_hash,
         "message": commit_message,
-        "file": test_file_path,
         "timestamp": int(time.time()),
     }

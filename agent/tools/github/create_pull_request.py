@@ -10,7 +10,7 @@ def create_pull_request(
 ) -> str:
     """Create a new pull request from the branch"""
     target_file = Path(target_file_path).stem
-    title = f"Add automated tests for {target_file}"
+    title = f"[code-test-agent] Add automated tests for {target_file}"
     body = f"""
 ## Before this PR
 No tests available for `{target_file}`
