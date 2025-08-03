@@ -17,7 +17,7 @@ def llm_test_generator(state: State):
         test_file_path = _generate_test_file_path(file_path)
 
         # First time this node is running, add prompts
-        messages = state.messages + [
+        messages = [
             SystemMessage(SYSTEM_PROMPT),
             HumanMessage(
                 TEST_GENERATION_PROMPT.format(
