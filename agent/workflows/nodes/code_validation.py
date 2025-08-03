@@ -34,8 +34,7 @@ def code_validation(state: State):
     print(f"Got pytest result: {pytest_result}")
 
     if pytest_result["passed"]:
-        # TODO This is weird
-        return {"current_phase": WorkflowPhase.PR_SUBMISSION}
+        return {"current_phase": WorkflowPhase.CODE_VALIDATION}
 
     pytest_output = pytest_result.get("raw_stdout", "") + pytest_result.get(
         "raw_stderr", ""
