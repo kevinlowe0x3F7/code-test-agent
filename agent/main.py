@@ -4,7 +4,7 @@ from agent.workflows.graph import graph
 
 
 def main():
-    graph.invoke({"target_file_path": "test.py"})
+    graph.invoke({"target_file_path": "src/example.py"})
 
 
 if __name__ == "__main__":

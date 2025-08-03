@@ -19,6 +19,7 @@ def llm_test_generator(state: State):
 
         response = llm_with_tools.invoke(messages)
 
+        print(f"Got response in llm_test_generator with added prompts: {response}")
         return {
             "messages": [*messages, response],
             "current_phase": WorkflowPhase.TEST_GENERATION,
@@ -27,4 +28,5 @@ def llm_test_generator(state: State):
         # We're in tool loop - continue conversation
         response = llm_with_tools.invoke(state.messages)
 
+        print(f"Got response in llm_test_generator in tool loop: {response}")
         return {"messages": [response], "current_phase": WorkflowPhase.TEST_GENERATION}
