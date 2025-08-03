@@ -13,5 +13,6 @@ class WorkflowPhase(Enum):
 
 class State(BaseModel):
     target_file_path: str
+    test_file_path: str | None = None
     messages: Annotated[list[BaseMessage], add_messages]
     current_phase: WorkflowPhase = WorkflowPhase.INITIAL

@@ -1,5 +1,5 @@
 from langchain_core.messages.tool import ToolMessage
-from agent.tools.file_reader import read_file
+from agent.tools.registry import get_tool_by_name
 from agent.workflows.state import State
 
 TOOL_EXECUTION_NODE = "tool_execution"
@@ -11,8 +11,11 @@ def tool_execution(state: State):
 
     for tool_call in last_message.tool_calls:
         try:
-            if tool_call["name"] == "read_file":
-                result = read_file.invoke(tool_call["args"])
+            tool = get_tool_by_name(tool_call["name"])
+            if tool:
+                result = tool.invoke(tool_call["args"])
+            else:
+                result = f"Unknown tool: {tool_call['name']}"
 
             print(f"Got result from tool call execution: {result}")
             tool_messages.append(
