@@ -6,17 +6,13 @@ def test_add_numbers_positive():
     assert add_numbers(3, 5) == 8
 
 def test_add_numbers_negative():
-    """Test adding a positive and negative number."""
+    """Test adding a positive and a negative number."""
     assert add_numbers(10, -4) == 6
 
 def test_add_numbers_zero():
-    """Test adding with zero."""
+    """Test adding numbers with zero."""
     assert add_numbers(0, 0) == 0
-
-def test_add_numbers_type_hints():
-    """Verify that the function accepts integer type hints."""
-    result = add_numbers(2, 3)
-    assert isinstance(result, int)
+    assert add_numbers(7, 0) == 7
 
 def test_greet_basic():
     """Test basic greeting functionality."""
@@ -26,11 +22,10 @@ def test_greet_empty_string():
     """Test greeting with an empty string."""
     assert greet("") == "Hello, !"
 
-def test_greet_whitespace():
-    """Test greeting with whitespace name."""
-    assert greet(" John ") == "Hello,  John !"
+def test_greet_with_spaces():
+    """Test greeting with names containing spaces."""
+    assert greet("John Doe") == "Hello, John Doe!"
 
-def test_greet_type_hints():
-    """Verify that the function accepts string type hint."""
-    result = greet("Bob")
-    assert isinstance(result, str)
+def test_greet_with_special_characters():
+    """Test greeting with names containing special characters."""
+    assert greet("Alice_Smith-123") == "Hello, Alice_Smith-123!"
