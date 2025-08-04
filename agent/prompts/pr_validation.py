@@ -68,5 +68,7 @@ PR_COMMENT_RESPONSE_PROMPT = """
   - - = Remove this line
   - + = Add this line
 
+  4. Indentation matters. The context lines must be EXACTLY the same and the line additions or deletions must factor in the existing indentation.
+
   Generate appropriate diffs to address all feedback.
   """

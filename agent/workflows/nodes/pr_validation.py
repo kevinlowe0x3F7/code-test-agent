@@ -1,7 +1,6 @@
 import time
 from datetime import datetime, timezone
 from langchain_core.messages.human import HumanMessage
-from agent.prompts.code_validation import CODE_VALIDATION_PROMPT
 from agent.prompts.pr_validation import PR_COMMENT_RESPONSE_PROMPT
 from agent.tools.github.fetch_pull_request import fetch_pull_request
 from agent.tools.github.fetch_pull_request_review_comments import (
@@ -95,22 +94,12 @@ def pr_validation(state: State):
         )
     )
     print("💬 Sending message to LLM in PR validation")
-    if state.current_phase != WorkflowPhase.PR_VALIDATION:
-        response = llm_with_tools.invoke(state.messages + [human_message])
+    response = llm_with_tools.invoke(state.messages + [human_message])
 
-        print(f"Got response in pr_validator with added prompts: {response}")
-        return {
-            "messages": [human_message, response],
-            "current_phase": WorkflowPhase.PR_VALIDATION,
-            "code_validation_pytest_retry_attempts": 0,
-            "reviews_last_processed": next_processed_time,
-        }
-    else:
-        # We're in tool loop - continue conversation
-        response = llm_with_tools.invoke(state.messages + [human_message])
-
-        print(f"Got response in pr_validator in tool loop: {response}")
-        return {
-            "messages": [response],
-            "current_phase": WorkflowPhase.PR_VALIDATION,
-        }
+    print(f"Got response in pr_validator with added prompts: {response}")
+    return {
+        "messages": [human_message, response],
+        "current_phase": WorkflowPhase.PR_VALIDATION,
+        "code_validation_pytest_retry_attempts": 0,
+        "reviews_last_processed": next_processed_time,
+    }
