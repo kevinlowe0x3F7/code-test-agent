@@ -13,6 +13,8 @@ PR_COMMENT_RESPONSE_PROMPT = """
   - start_line: If this is present, that means that this is a comment that spans multiple lines. For example
     if line is 17 and start_line is 10, then this comment was meant for lines 10-17. If line is 17 and start_line
     is not present, then the comment is only for line 17.
+  Remember that lines in files are 1-indexed, so that means if the comment is referring to line 3, then it is the 3rd line
+  that should be added, removed, or modified, not the 4th line.
   {line_comments}
 
   REQUIRED ACTIONS:
