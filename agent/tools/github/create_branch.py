@@ -9,7 +9,7 @@ def create_git_branch(target_file_path: str, work_dir: str = ".") -> str:
     """Create new branch based off of target_file_path name"""
     filename = Path(target_file_path).stem
     timestamp = int(time.time())
-    branch_name = f"agent-test-{filename}-{timestamp}"
+    branch_name = f"code-test-agent/{filename}-{timestamp}"
 
     subprocess.run(
         ["git", "checkout", "-b", branch_name],
