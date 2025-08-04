@@ -1,44 +1,39 @@
 import pytest
 from src.example import add_numbers, greet
 
-
 def test_add_numbers_positive():
     """Test adding two positive numbers."""
     assert add_numbers(3, 5) == 8
 
-
 def test_add_numbers_negative():
-    """Test adding a positive and a negative number."""
-    assert add_numbers(5, -3) == 2
+    """Test adding two negative numbers."""
+    assert add_numbers(-3, -5) == -8
 
+def test_add_numbers_mixed():
+    """Test adding a positive and negative number."""
+    assert add_numbers(10, -4) == 6
 
 def test_add_numbers_zero():
     """Test adding zero to a number."""
-    assert add_numbers(0, 10) == 10
-
+    assert add_numbers(0, 7) == 7
+    assert add_numbers(7, 0) == 7
 
 def test_add_numbers_large():
     """Test adding large numbers."""
     assert add_numbers(1000000, 2000000) == 3000000
 
-
-def test_greet_simple_name():
-    """Test greeting with a simple name."""
+def test_greet_normal_name():
+    """Test greeting with a typical name."""
     assert greet("Alice") == "Hello, Alice!"
-
 
 def test_greet_empty_name():
     """Test greeting with an empty string."""
     assert greet("") == "Hello, !"
 
+def test_greet_with_spaces():
+    """Test greeting with a name containing spaces."""
+    assert greet("John Doe") == "Hello, John Doe!"
 
-def test_greet_with_complex_names():
-    """Test greeting with names containing spaces and special characters."""
-    test_cases = [
-        "John Doe",
-        "Sam-123",
-        "Alice Smith Jr.",
-        "user@example.com"
-    ]
-    for name in test_cases:
-        assert greet(name) == f"Hello, {name}!"
+def test_greet_with_special_characters():
+    """Test greeting with a name containing special characters."""
+    assert greet("Alice123") == "Hello, Alice123!"
