@@ -27,11 +27,8 @@ def pr_validation(state: State):
 
     # check PR status
     pr_info = fetch_pull_request.invoke({"pr_url": state.pr_url})
-    if (
-        not hasattr(pr_info, "state")
-        or not hasattr(pr_info, "mergeable")
-        or not hasattr(pr_info, "reviews")
-    ):
+    print(f"Top level PR: {pr_info}")
+    if "state" not in pr_info or "mergeable" not in pr_info or "reviews" not in pr_info:
         print("ERROR: Missing PR info in pr_validation")
         return {
             "current_phase": WorkflowPhase.ERROR,
@@ -65,16 +62,16 @@ def pr_validation(state: State):
         return submitted_time > last_processed_time
 
     unprocessed_reviews = list(
-        filter(lambda review: is_unprocessed(review, lambda r: r.submittedAt), reviews)
+        filter(
+            lambda review: is_unprocessed(review, lambda r: r["submittedAt"]), reviews
+        )
     )
     if len(unprocessed_reviews) == 0:
         print("⏳ No reviews to process, waiting")
         return {"current_phase": WorkflowPhase.PR_VALIDATION}
 
     # New comments, need to invoke LLM with a new message
-    top_level_pr_review_comments = list(
-        map(lambda r: r["body"] for r in unprocessed_reviews)
-    )
+    top_level_pr_review_comments = list(map(lambda r: r["body"], unprocessed_reviews))
 
     comments = fetch_pull_request_review_comments.invoke({"pr_url": state.pr_url})
     relevant_comments = [

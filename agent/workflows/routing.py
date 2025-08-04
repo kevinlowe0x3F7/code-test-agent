@@ -73,7 +73,8 @@ def route_after_pr_submission(state: State):
     if state.current_phase == WorkflowPhase.ERROR:
         return ERROR_HANDLER_NODE
     elif state.current_phase == WorkflowPhase.PR_SUBMISSION:
-        return PR_VALIDATION_NODE
+        # Give time for PR to be created
+        return PR_POLLING_WAIT_NODE
 
     print(
         f"WARNING: Unexpected state after code_validation {state.current_phase}, ending workflow"
@@ -100,6 +101,6 @@ def route_after_pr_validation(state: State):
     return END
 
 
-def route_after_pr_polling_wait():
+def route_after_pr_polling_wait(_state):
     """Route after pr polling, always go back to pr validation"""
     return PR_VALIDATION_NODE

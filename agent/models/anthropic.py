@@ -5,7 +5,7 @@ from langchain.chat_models import init_chat_model
 load_dotenv()
 
 
-def get_anthropic_model(model_name: str = "claude-sonnet-4-20250514"):
+def get_anthropic_model(model_name: str = "claude-3-5-haiku-20241022"):
     """Initialize Anthropic chat model with API key from environment."""
     return init_chat_model(
         model=model_name,

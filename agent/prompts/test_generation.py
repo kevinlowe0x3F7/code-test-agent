@@ -12,7 +12,11 @@ Requirements:
 - Include edge cases
 - The test file should be ready to run pytest on it
 
-First read the source file to understand the code, then generate comprehensive tests and write them to {test_file_path} using the write_file tool.
+First read the source file to understand the code, then generate comprehensive tests and write them using the write_file tool.
+
+IMPORTANT: When calling write_file, you MUST include both parameters:
+- file_path: "{test_file_path}"
+- content: "<your complete generated test code>"
 """
 
 """

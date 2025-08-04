@@ -68,7 +68,7 @@ graph_builder.add_conditional_edges(
     PR_SUBMISSION_NODE,
     route_after_pr_submission,
     {
-        PR_VALIDATION_NODE: PR_VALIDATION_NODE,
+        PR_POLLING_WAIT_NODE: PR_POLLING_WAIT_NODE,
         ERROR_HANDLER_NODE: ERROR_HANDLER_NODE,
         END: END,
     },
