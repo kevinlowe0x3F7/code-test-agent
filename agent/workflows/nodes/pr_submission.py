@@ -1,4 +1,5 @@
 import os
+from agent.tools.github.checkout_branch import checkout_git_branch
 from agent.tools.github.commit import commit_test_file
 from agent.tools.github.create_branch import create_git_branch
 from agent.tools.github.create_pull_request import create_pull_request
@@ -6,6 +7,8 @@ from agent.tools.github.push_branch import push_branch
 from agent.workflows.state import State, WorkflowPhase
 
 PR_SUBMISSION_NODE = "pr_submission"
+
+MAIN_BRANCH_NAME = "develop"
 
 
 def pr_submission(state: State):
@@ -23,13 +26,15 @@ def pr_submission(state: State):
         }
 
     # TODO: fetch latest main branch in production
-    # TODO: make sure we're on main branch
     try:
-        branch_name = (
-            state.branch_name
-            if state.branch_name
-            else create_git_branch.invoke({"target_file_path": state.target_file_path})
-        )
+        # If creating new branch, make sure we're doing it off main branch
+        if not state.branch_name:
+            checkout_git_branch.invoke({"branch_name": MAIN_BRANCH_NAME})
+            branch_name = create_git_branch.invoke(
+                {"target_file_path": state.target_file_path}
+            )
+        else:
+            branch_name = state.branch_name
         commit_info = commit_test_file.invoke(
             {
                 "test_file_path": state.test_file_path,
