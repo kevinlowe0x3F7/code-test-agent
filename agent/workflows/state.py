@@ -8,10 +8,18 @@ from pydantic import BaseModel
 class WorkflowPhase(Enum):
     INITIAL = "initial"
     TEST_GENERATION = "test_generation"
+    TEST_GENERATION_COMPLETED = "test_generation_completed"
     CODE_VALIDATION = "code_validation"
     CODE_VALIDATION_COMPLETED = "code_validation_completed"
     PR_SUBMISSION = "pr_submission"
     PR_VALIDATION = "pr_validation"
+    PR_VALIDATION_ADDRESSING_COMMENTS = (
+        "pr_validation_addressing_comments"  # New comments found, LLM responding
+    )
+    PR_VALIDATION_CHANGES_MADE = (
+        "pr_validation_changes_made"  # LLM wants to make code changes
+    )
+    PR_VALIDATION_WAITING = "pr_validation_waiting"  # Waiting for more reviews
     ERROR = "error"
     COMPLETED = "completed"
 

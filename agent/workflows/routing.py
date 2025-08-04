@@ -19,16 +19,10 @@ def route_after_test_generation(state: State):
         and state.messages[-1].tool_calls
     ):
         return TOOL_EXECUTION_NODE
-
-    # If test generation is done, move to code validation
-    if state.current_phase == WorkflowPhase.TEST_GENERATION:
+    elif state.current_phase == WorkflowPhase.TEST_GENERATION_COMPLETED:
         return CODE_VALIDATION_NODE
 
-    # Default fallback
-    print(
-        f"WARNING: Unexpected state after test_generation {state.current_phase}, ending workflow"
-    )
-    return END
+    return TEST_GENERATION_NODE
 
 
 def route_after_tool_execution(state: State):
@@ -40,7 +34,10 @@ def route_after_tool_execution(state: State):
         return TEST_GENERATION_NODE
     elif state.current_phase == WorkflowPhase.CODE_VALIDATION:
         return CODE_VALIDATION_NODE
-    elif state.current_phase == WorkflowPhase.PR_VALIDATION:
+    elif (
+        state.current_phase == WorkflowPhase.PR_VALIDATION
+        or state.current_phase == WorkflowPhase.PR_VALIDATION_ADDRESSING_COMMENTS
+    ):
         return CODE_VALIDATION_NODE
 
     print(
@@ -92,13 +89,14 @@ def route_after_pr_validation(state: State):
         and state.messages[-1].tool_calls
     ):
         return TOOL_EXECUTION_NODE
+    elif state.current_phase == WorkflowPhase.PR_VALIDATION_CHANGES_MADE:
+        return CODE_VALIDATION_NODE
     elif state.current_phase == WorkflowPhase.COMPLETED:
         return END
-    elif state.current_phase == WorkflowPhase.PR_VALIDATION:
+    elif state.current_phase == WorkflowPhase.PR_VALIDATION_WAITING:
         return PR_POLLING_WAIT_NODE
 
-    print(f"WARNING: Unexpected state after pr {state.current_phase}, ending workflow")
-    return END
+    return PR_VALIDATION_NODE
 
 
 def route_after_pr_polling_wait(_state):
