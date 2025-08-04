@@ -11,6 +11,7 @@ class WorkflowPhase(Enum):
     CODE_VALIDATION = "code_validation"
     CODE_VALIDATION_COMPLETED = "code_validation_completed"
     PR_SUBMISSION = "pr_submission"
+    PR_VALIDATION = "pr_validation"
     ERROR = "error"
     COMPLETED = "completed"
 
@@ -27,6 +28,7 @@ class State(BaseModel):
     code_validation_pytest_retry_attempts: int = 0
     branch_name: str | None = None
     pr_url: str | None = None
+    reviews_last_processed: int | None = None  # epoch timestamp
     commits: Annotated[List[Dict], add_commit] = []
     messages: Annotated[list[BaseMessage], add_messages]
     current_phase: WorkflowPhase = WorkflowPhase.INITIAL

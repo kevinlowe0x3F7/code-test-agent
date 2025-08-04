@@ -22,10 +22,13 @@ def pr_submission(state: State):
             "error_message": "Test file not found - cannot push to Github",
         }
 
-    # TODO: fetch latest develop in production
+    # TODO: fetch latest main branch in production
+    # TODO: make sure we're on main branch
     try:
-        branch_name = create_git_branch.invoke(
-            {"target_file_path": state.target_file_path}
+        branch_name = (
+            state.branch_name
+            if state.branch_name
+            else create_git_branch.invoke({"target_file_path": state.target_file_path})
         )
         commit_info = commit_test_file.invoke(
             {
@@ -35,11 +38,15 @@ def pr_submission(state: State):
         )
         push_branch.invoke({"branch_name": branch_name})
 
-        pr_url = create_pull_request.invoke(
-            {
-                "test_file_path": state.test_file_path,
-                "target_file_path": state.target_file_path,
-            }
+        pr_url = (
+            state.pr_url
+            if state.pr_url
+            else create_pull_request.invoke(
+                {
+                    "test_file_path": state.test_file_path,
+                    "target_file_path": state.target_file_path,
+                }
+            )
         )
 
         return {
