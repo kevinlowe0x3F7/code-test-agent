@@ -10,6 +10,9 @@ CODE_VALIDATION_NODE = "code_validation"
 
 
 def code_validation(state: State):
+    if state.current_phase == WorkflowPhase.CODE_VALIDATION_COMPLETED:
+        return {}
+
     llm_with_tools = anthropic_model.bind_tools(get_all_tools())
 
     if not state.test_file_path:

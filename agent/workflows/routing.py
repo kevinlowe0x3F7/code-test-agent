@@ -30,15 +30,22 @@ def route_after_tool_execution(state: State):
     if state.current_phase == WorkflowPhase.ERROR:
         return ERROR_HANDLER_NODE
 
-    if state.current_phase == WorkflowPhase.TEST_GENERATION:
+    if (
+        state.current_phase == WorkflowPhase.TEST_GENERATION
+        or state.current_phase == WorkflowPhase.TEST_GENERATION_COMPLETED
+    ):
         return TEST_GENERATION_NODE
-    elif state.current_phase == WorkflowPhase.CODE_VALIDATION:
+    elif (
+        state.current_phase == WorkflowPhase.CODE_VALIDATION
+        or state.current_phase == WorkflowPhase.CODE_VALIDATION_COMPLETED
+        or state.current_phase == WorkflowPhase.PR_VALIDATION_CHANGES_MADE
+    ):
         return CODE_VALIDATION_NODE
     elif (
         state.current_phase == WorkflowPhase.PR_VALIDATION
         or state.current_phase == WorkflowPhase.PR_VALIDATION_ADDRESSING_COMMENTS
     ):
-        return CODE_VALIDATION_NODE
+        return PR_VALIDATION_NODE
 
     print(
         f"WARNING: Unexpected state after tool_execution {state.current_phase}, ending workflow"

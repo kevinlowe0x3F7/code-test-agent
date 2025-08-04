@@ -10,9 +10,13 @@ TEST_GENERATION_NODE = "test_generation"
 
 
 def test_generation(state: State):
+    if state.current_phase == WorkflowPhase.TEST_GENERATION_COMPLETED:
+        return {}
+
     llm_with_tools = anthropic_model.bind_tools(get_all_tools())
 
     file_path = state.target_file_path
+    # Probably a better condition than this
     if state.current_phase != WorkflowPhase.TEST_GENERATION:
         test_file_path = _generate_test_file_path(file_path)
 

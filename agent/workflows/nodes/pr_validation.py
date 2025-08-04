@@ -49,7 +49,7 @@ def pr_validation(state: State):
         submitted_time = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(
             tzinfo=timezone.utc
         )
-        return submitted_time > last_processed_time
+        return submitted_time > last_processed_time and review["body"]
 
     unprocessed_reviews = list(
         filter(
