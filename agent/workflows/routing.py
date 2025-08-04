@@ -55,7 +55,7 @@ def route_after_code_validation(state: State):
         and state.messages[-1].tool_calls
     ):
         return TOOL_EXECUTION_NODE
-    elif state.current_phase == WorkflowPhase.CODE_VALIDATION:
+    elif state.current_phase == WorkflowPhase.CODE_VALIDATION_COMPLETED:
         return PR_SUBMISSION_NODE
 
     print(

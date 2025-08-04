@@ -34,7 +34,7 @@ def code_validation(state: State):
     print(f"Got pytest result: {pytest_result}")
 
     if pytest_result["passed"]:
-        return {"current_phase": WorkflowPhase.CODE_VALIDATION}
+        return {"current_phase": WorkflowPhase.CODE_VALIDATION_COMPLETED}
 
     pytest_output = pytest_result.get("raw_stdout", "") + pytest_result.get(
         "raw_stderr", ""
