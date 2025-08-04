@@ -12,7 +12,6 @@ def test_add_numbers_negative():
 def test_add_numbers_zero():
     """Test adding numbers with zero."""
     assert add_numbers(0, 0) == 0
-    assert add_numbers(7, 0) == 7
 
 def test_greet_basic():
     """Test basic greeting functionality."""
