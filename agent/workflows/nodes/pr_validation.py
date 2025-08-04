@@ -15,8 +15,6 @@ PR_VALIDATION_NODE = "pr_validation"
 
 
 def pr_validation(state: State):
-    llm_with_tools = anthropic_model.bind_tools(get_all_tools())
-
     if not state.pr_url:
         print("ERROR: Missing PR url in pr_validation")
         return {
@@ -38,14 +36,7 @@ def pr_validation(state: State):
         print("❌ PR was closed")
         return {"current_phase": WorkflowPhase.COMPLETED}
 
-    mergeability = pr_info["mergeable"]
     reviews = pr_info["reviews"]
-    # TODO in production this would probably just be handled by mergeability and GH approval rules
-    has_approved = any(review["state"] == "APPROVED" for review in reviews)
-    if mergeability == "MERGEABLE" and has_approved:
-        print("🎉 Merging in PR")
-        merge_pull_request.invoke({"pr_url": state.pr_url})
-        return {"current_phase": WorkflowPhase.COMPLETED}
 
     last_processed_time = datetime.fromtimestamp(
         state.reviews_last_processed or 0, tz=timezone.utc
@@ -92,35 +83,40 @@ def pr_validation(state: State):
         )
     )
 
-    tool_use = False
-    if tool_use:
-        # We're in tool loop - continue conversation
-        print("🔄 Tool use loop in PR validation")
-        response = llm_with_tools.invoke(
-            state.messages + [human_message] if has_comments else state.messages
-        )
-
-        print(f"Got response in pr_validation in tool loop: {response}")
-        return {"messages": [response], "current_phase": WorkflowPhase.PR_VALIDATION}
-
-    if has_comments:
-        next_processed_time = int(time.time())
+    if (
+        has_comments
+        and state.current_phase != WorkflowPhase.PR_VALIDATION_ADDRESSING_COMMENTS
+    ):
+        llm_with_tools = anthropic_model.bind_tools(get_all_tools())
         print("💬 Sending message to LLM in PR validation")
         response = llm_with_tools.invoke(state.messages + [human_message])
 
         print(f"Got response in pr_validator with added prompts: {response}")
         return {
             "messages": [human_message, response],
-            "current_phase": WorkflowPhase.PR_VALIDATION,
-            "code_validation_pytest_retry_attempts": 0,
-            "reviews_last_processed": next_processed_time,
-            "test_file_passes_test": False,
+            "current_phase": WorkflowPhase.PR_VALIDATION_ADDRESSING_COMMENTS,
+            "reviews_last_processed": int(time.time()),
         }
 
-    # if mergeability == "MERGEABLE" and has_approved:
-    #     print("🎉 Merging in PR")
-    #     merge_pull_request.invoke({"pr_url": state.pr_url})
-    #     return {"current_phase": WorkflowPhase.COMPLETED}
+    if state.current_phase == WorkflowPhase.PR_VALIDATION_ADDRESSING_COMMENTS:
+        # We're in tool loop - continue conversation
+        llm_with_tools = anthropic_model.bind_tools(get_all_tools())
+        print("🔄 Tool use loop in PR validation")
+        response = llm_with_tools.invoke(state.messages)
+
+        print(f"Got response in pr_validation in tool loop: {response}")
+        return {
+            "messages": [response],
+            "current_phase": WorkflowPhase.PR_VALIDATION_ADDRESSING_COMMENTS,
+        }
+
+    # TODO in production this would probably just be handled by mergeability and GH approval rules
+    mergeability = pr_info["mergeable"]
+    has_approved = any(review["state"] == "APPROVED" for review in reviews)
+    if mergeability == "MERGEABLE" and has_approved:
+        print("🎉 Merging in PR")
+        merge_pull_request.invoke({"pr_url": state.pr_url})
+        return {"current_phase": WorkflowPhase.COMPLETED}
 
     print("⏳ No reviews to process, waiting")
-    return {"current_phase": WorkflowPhase.PR_VALIDATION}
+    return {"current_phase": WorkflowPhase.PR_VALIDATION_WAITING}

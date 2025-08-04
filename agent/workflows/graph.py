@@ -38,7 +38,6 @@ graph_builder.add_conditional_edges(
         TOOL_EXECUTION_NODE: TOOL_EXECUTION_NODE,
         CODE_VALIDATION_NODE: CODE_VALIDATION_NODE,
         ERROR_HANDLER_NODE: ERROR_HANDLER_NODE,
-        END: END,
     },
 )
 
@@ -79,6 +78,7 @@ graph_builder.add_conditional_edges(
     route_after_pr_validation,
     {
         TOOL_EXECUTION_NODE: TOOL_EXECUTION_NODE,
+        CODE_VALIDATION_NODE: CODE_VALIDATION_NODE,
         PR_POLLING_WAIT_NODE: PR_POLLING_WAIT_NODE,
         ERROR_HANDLER_NODE: ERROR_HANDLER_NODE,
         END: END,

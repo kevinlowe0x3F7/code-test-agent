@@ -2,7 +2,7 @@ import os
 from langchain_core.tools import tool
 
 
-def _write_file_impl(file_path: str, content: str) -> str:
+def _write_file_impl(file_path: str, content: str) -> str | None:
     """Pure Python implementation for writing files."""
     try:
         # Create directory if it doesn't exist
@@ -10,13 +10,13 @@ def _write_file_impl(file_path: str, content: str) -> str:
 
         with open(file_path, "w") as f:
             f.write(content)
-        return f"Successfully wrote file: {file_path}"
+        return file_path
     except Exception as e:
         print(f"Error writing file {file_path}: {e}")
-        return f"Error writing file {file_path}: {e}"
+        return None
 
 
 @tool
-def write_file(file_path: str, content: str) -> str:
+def write_file(file_path: str, content: str) -> str | None:
     """Write content to specified file path."""
     return _write_file_impl(file_path, content)
