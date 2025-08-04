@@ -5,6 +5,7 @@ from agent.workflows.nodes.pr_submission import PR_SUBMISSION_NODE
 from agent.workflows.nodes.pr_validation import PR_VALIDATION_NODE
 from agent.workflows.nodes.tool_execution import TOOL_EXECUTION_NODE
 from agent.workflows.nodes.test_generation import TEST_GENERATION_NODE
+from agent.workflows.routing_utils import is_in_tool_use
 from agent.workflows.state import State, WorkflowPhase
 from langgraph.graph import END
 
@@ -13,11 +14,7 @@ def route_after_test_generation(state: State):
     """Route after test generation node"""
     if state.current_phase == WorkflowPhase.ERROR:
         return ERROR_HANDLER_NODE
-    elif (
-        state.messages
-        and hasattr(state.messages[-1], "tool_calls")
-        and state.messages[-1].tool_calls
-    ):
+    elif is_in_tool_use(state):
         return TOOL_EXECUTION_NODE
 
     # If test generation is done, move to code validation
@@ -41,7 +38,7 @@ def route_after_tool_execution(state: State):
     elif state.current_phase == WorkflowPhase.CODE_VALIDATION:
         return CODE_VALIDATION_NODE
     elif state.current_phase == WorkflowPhase.PR_VALIDATION:
-        return CODE_VALIDATION_NODE
+        return PR_VALIDATION_NODE
 
     print(
         f"WARNING: Unexpected state after tool_execution {state.current_phase}, ending workflow"
@@ -53,13 +50,12 @@ def route_after_code_validation(state: State):
     """Route after code validation node"""
     if state.current_phase == WorkflowPhase.ERROR:
         return ERROR_HANDLER_NODE
-    elif (
-        state.messages
-        and hasattr(state.messages[-1], "tool_calls")
-        and state.messages[-1].tool_calls
-    ):
+    elif is_in_tool_use(state):
         return TOOL_EXECUTION_NODE
-    elif state.current_phase == WorkflowPhase.CODE_VALIDATION_COMPLETED:
+    elif (
+        state.current_phase == WorkflowPhase.CODE_VALIDATION
+        and state.test_file_passes_tests
+    ):
         return PR_SUBMISSION_NODE
 
     print(
@@ -86,16 +82,15 @@ def route_after_pr_validation(state: State):
     """Route after pr validation node"""
     if state.current_phase == WorkflowPhase.ERROR:
         return ERROR_HANDLER_NODE
-    elif (
-        state.messages
-        and hasattr(state.messages[-1], "tool_calls")
-        and state.messages[-1].tool_calls
-    ):
+    elif is_in_tool_use(state):
         return TOOL_EXECUTION_NODE
     elif state.current_phase == WorkflowPhase.COMPLETED:
         return END
     elif state.current_phase == WorkflowPhase.PR_VALIDATION:
-        return PR_POLLING_WAIT_NODE
+        if state.test_file_passes_tests:
+            return PR_POLLING_WAIT_NODE
+        else:
+            return CODE_VALIDATION_NODE
 
     print(f"WARNING: Unexpected state after pr {state.current_phase}, ending workflow")
     return END

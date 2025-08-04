@@ -3,6 +3,7 @@ import subprocess
 from langchain_core.messages.human import HumanMessage
 from agent.prompts.code_validation import CODE_VALIDATION_PROMPT
 from agent.tools.registry import get_all_tools
+from agent.workflows.routing_utils import is_in_tool_use
 from agent.workflows.state import State, WorkflowPhase
 from agent.models.anthropic import anthropic_model
 
@@ -34,7 +35,10 @@ def code_validation(state: State):
     print(f"Got pytest result: {pytest_result}")
 
     if pytest_result["passed"]:
-        return {"current_phase": WorkflowPhase.CODE_VALIDATION_COMPLETED}
+        return {
+            "test_file_passes_tests": True,
+            "current_phase": WorkflowPhase.CODE_VALIDATION,
+        }
 
     pytest_output = pytest_result.get("raw_stdout", "") + pytest_result.get(
         "raw_stderr", ""
@@ -44,23 +48,23 @@ def code_validation(state: State):
             test_file_path=state.test_file_path, pytest_result=pytest_output
         )
     )
-    if state.current_phase != WorkflowPhase.CODE_VALIDATION:
-        response = llm_with_tools.invoke(state.messages + [human_message])
-
-        print(f"Got response in code_validator with added prompts: {response}")
-        return {
-            "messages": [human_message, response],
-            "current_phase": WorkflowPhase.CODE_VALIDATION,
-            "code_validation_pytest_retry_attempts": state.code_validation_pytest_retry_attempts
-            + 1,
-        }
-    else:
+    if is_in_tool_use(state):
         # We're in tool loop - continue conversation
         response = llm_with_tools.invoke(state.messages + [human_message])
 
         print(f"Got response in code_validator in tool loop: {response}")
         return {
             "messages": [response],
+            "code_validation_pytest_retry_attempts": state.code_validation_pytest_retry_attempts
+            + 1,
+        }
+    else:
+        response = llm_with_tools.invoke(state.messages + [human_message])
+
+        print(f"Got response in code_validator with added prompts: {response}")
+        return {
+            "messages": [human_message, response],
+            "current_phase": WorkflowPhase.CODE_VALIDATION,
             "code_validation_pytest_retry_attempts": state.code_validation_pytest_retry_attempts
             + 1,
         }

@@ -2,6 +2,7 @@ from langchain_core.messages.human import HumanMessage
 from langchain_core.messages.system import SystemMessage
 from agent.prompts.test_generation import SYSTEM_PROMPT, TEST_GENERATION_PROMPT
 from agent.tools.registry import get_all_tools
+from agent.workflows.routing_utils import is_in_tool_use
 from agent.workflows.state import State, WorkflowPhase
 from agent.models.anthropic import anthropic_model
 from pathlib import Path
@@ -13,7 +14,13 @@ def test_generation(state: State):
     llm_with_tools = anthropic_model.bind_tools(get_all_tools())
 
     file_path = state.target_file_path
-    if state.current_phase != WorkflowPhase.TEST_GENERATION:
+    if is_in_tool_use(state):
+        # We're in tool loop - continue conversation
+        response = llm_with_tools.invoke(state.messages)
+
+        print(f"Got response in test_generation in tool loop: {response}")
+        return {"messages": [response], "current_phase": WorkflowPhase.TEST_GENERATION}
+    else:
         test_file_path = _generate_test_file_path(file_path)
 
         # First time this node is running, add prompts
@@ -34,12 +41,6 @@ def test_generation(state: State):
             "current_phase": WorkflowPhase.TEST_GENERATION,
             "test_file_path": test_file_path,
         }
-    else:
-        # We're in tool loop - continue conversation
-        response = llm_with_tools.invoke(state.messages)
-
-        print(f"Got response in test_generation in tool loop: {response}")
-        return {"messages": [response], "current_phase": WorkflowPhase.TEST_GENERATION}
 
 
 def _generate_test_file_path(source_file_path: str) -> str:

@@ -1,11 +1,9 @@
-from .file_diff import apply_diff_file
 from .file_reader import read_file
 from .file_writer import write_file
 
 TOOL_REGISTRY = {
     "read_file": read_file,
     "write_file": write_file,
-    "apply_diff_file": apply_diff_file,
 }
 
 

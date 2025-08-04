@@ -8,6 +8,7 @@ from agent.tools.github.fetch_pull_request_review_comments import (
 )
 from agent.tools.github.merge_pull_request import merge_pull_request
 from agent.tools.registry import get_all_tools
+from agent.workflows.routing_utils import is_in_tool_use
 from agent.workflows.state import State, WorkflowPhase
 from agent.models.anthropic import anthropic_model
 
@@ -24,7 +25,6 @@ def pr_validation(state: State):
             "error_message": "Missing PR url - cannot get PR info",
         }
 
-    # check PR status
     pr_info = fetch_pull_request.invoke({"pr_url": state.pr_url})
     print(f"Top level PR: {pr_info}")
     if "state" not in pr_info or "mergeable" not in pr_info or "reviews" not in pr_info:
@@ -38,14 +38,11 @@ def pr_validation(state: State):
     if pr_status == "CLOSED":
         print("❌ PR was closed")
         return {"current_phase": WorkflowPhase.COMPLETED}
+
     mergeability = pr_info["mergeable"]
     reviews = pr_info["reviews"]
     # TODO in production this would probably just be handled by mergeability and GH approval rules
     has_approved = any(review["state"] == "APPROVED" for review in reviews)
-    if mergeability == "MERGEABLE" and has_approved:
-        print("🎉 Merging in PR")
-        merge_pull_request.invoke({"pr_url": state.pr_url})
-        return {"current_phase": WorkflowPhase.COMPLETED}
 
     last_processed_time = datetime.fromtimestamp(
         state.reviews_last_processed or 0, tz=timezone.utc
@@ -65,9 +62,6 @@ def pr_validation(state: State):
             lambda review: is_unprocessed(review, lambda r: r["submittedAt"]), reviews
         )
     )
-    if len(unprocessed_reviews) == 0:
-        print("⏳ No reviews to process, waiting")
-        return {"current_phase": WorkflowPhase.PR_VALIDATION}
 
     # New comments, need to invoke LLM with a new message
     top_level_pr_review_comments = list(map(lambda r: r["body"], unprocessed_reviews))
@@ -78,7 +72,6 @@ def pr_validation(state: State):
             "body": comment["body"],
             "path": comment["path"],
             "line": comment["line"],
-            "diff_hunk": comment["diff_hunk"],
             "side": comment["side"],
             "start_line": comment["start_line"],
         }
@@ -86,20 +79,44 @@ def pr_validation(state: State):
         if is_unprocessed(comment, lambda c: c["created_at"])
     ]
 
-    next_processed_time = int(time.time())
+    has_comments = len(top_level_pr_review_comments) > 0 or len(relevant_comments) > 0
+
     human_message = HumanMessage(
         PR_COMMENT_RESPONSE_PROMPT.format(
             top_level_comments=top_level_pr_review_comments,
             line_comments=relevant_comments,
+            test_file_path=state.test_file_path,
         )
     )
-    print("💬 Sending message to LLM in PR validation")
-    response = llm_with_tools.invoke(state.messages + [human_message])
 
-    print(f"Got response in pr_validator with added prompts: {response}")
-    return {
-        "messages": [human_message, response],
-        "current_phase": WorkflowPhase.PR_VALIDATION,
-        "code_validation_pytest_retry_attempts": 0,
-        "reviews_last_processed": next_processed_time,
-    }
+    if is_in_tool_use(state):
+        # We're in tool loop - continue conversation
+        print("🔄 Tool use loop in PR validation")
+        response = llm_with_tools.invoke(
+            state.messages + [human_message] if has_comments else state.messages
+        )
+
+        print(f"Got response in pr_validation in tool loop: {response}")
+        return {"messages": [response], "current_phase": WorkflowPhase.PR_VALIDATION}
+
+    if has_comments:
+        next_processed_time = int(time.time())
+        print("💬 Sending message to LLM in PR validation")
+        response = llm_with_tools.invoke(state.messages + [human_message])
+
+        print(f"Got response in pr_validator with added prompts: {response}")
+        return {
+            "messages": [human_message, response],
+            "current_phase": WorkflowPhase.PR_VALIDATION,
+            "code_validation_pytest_retry_attempts": 0,
+            "reviews_last_processed": next_processed_time,
+            "test_file_passes_test": False,
+        }
+
+    if mergeability == "MERGEABLE" and has_approved:
+        print("🎉 Merging in PR")
+        merge_pull_request.invoke({"pr_url": state.pr_url})
+        return {"current_phase": WorkflowPhase.COMPLETED}
+
+    print("⏳ No reviews to process, waiting")
+    return {"current_phase": WorkflowPhase.PR_VALIDATION}

@@ -9,7 +9,6 @@ class WorkflowPhase(Enum):
     INITIAL = "initial"
     TEST_GENERATION = "test_generation"
     CODE_VALIDATION = "code_validation"
-    CODE_VALIDATION_COMPLETED = "code_validation_completed"
     PR_SUBMISSION = "pr_submission"
     PR_VALIDATION = "pr_validation"
     ERROR = "error"
@@ -24,6 +23,7 @@ def add_commit(existing_commits: List[Dict], new_commit: Dict) -> List[Dict]:
 class State(BaseModel):
     target_file_path: str
     test_file_path: str | None = None
+    test_file_passes_tests: bool = False
     error_message: str | None = None
     code_validation_pytest_retry_attempts: int = 0
     branch_name: str | None = None

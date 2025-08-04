@@ -13,62 +13,17 @@ PR_COMMENT_RESPONSE_PROMPT = """
   - start_line: If this is present, that means that this is a comment that spans multiple lines. For example
     if line is 17 and start_line is 10, then this comment was meant for lines 10-17. If line is 17 and start_line
     is not present, then the comment is only for line 17.
-  - diff_hunk: A unified diff that the comment refers to.
   {line_comments}
 
   REQUIRED ACTIONS:
-  1. Address each comment by generating unified diff format changes
-  2. Use apply_diff_file tool to make the changes
-  3. The changes should address ALL feedback provided
+  1. Read through all the comments to understand what changes need to made to the test file
+  2. Read the contents of the test file using the read_file tool to get the latest output
+  3. Address the comments by regenerating the file contents and overwriting using the write_file tool
+  4. The changes should address ALL feedback provided
 
-  Here are examples of unified diff format:
-  1. Line Change (Most Common)
+  IMPORTANT: Do not make any other extraneous changes to the file other than what is requested in comments
 
-  --- a/test/test_example.py
-  +++ b/test/test_example.py
-  @@ -6,1 +6,1 @@
-  -    assert add_numbers(2, 3) == 6
-  +    assert add_numbers(2, 3) == 5
-
-  2. Line Addition
-
-  --- a/test/test_example.py
-  +++ b/test/test_example.py
-  @@ -10,0 +11,1 @@
-  +    assert add_numbers(5, 5) == 10
-
-  3. Line Removal
-
-  --- a/test/test_example.py
-  +++ b/test/test_example.py
-  @@ -18,1 +17,0 @@
-  -    assert greet("Bob") == "Hello, Bob!"
-
-  4. Multiple Changes in One Hunk
-
-  --- a/test/test_example.py
-  +++ b/test/test_example.py
-  @@ -5,3 +5,4 @@
-   def test_add_numbers_positive():
-  -    assert add_numbers(2, 3) == 6
-  +    assert add_numbers(2, 3) == 5
-  +    assert add_numbers(1, 1) == 2
-
-  Critical Format Rules:
-
-  1. Header Format (EXACT):
-  --- a/test/test_example.py
-  +++ b/test/test_example.py
-
-  2. Hunk Header Format:
-  @@ -old_start,old_count +new_start,new_count @@
-
-  3. Line Prefixes:
-  -   (space) = Context line (unchanged)
-  - - = Remove this line
-  - + = Add this line
-
-  4. Indentation matters. The context lines must be EXACTLY the same and the line additions or deletions must factor in the existing indentation.
-
-  Generate appropriate diffs to address all feedback.
+  IMPORTANT: When calling write_file, you MUST include both parameters:
+  - file_path: "{test_file_path}"
+  - content: "<your complete generated test code>"
   """
