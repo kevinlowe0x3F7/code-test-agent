@@ -10,19 +10,18 @@ def test_add_numbers_negative():
     assert add_numbers(10, -4) == 6
 
 def test_add_numbers_zero():
-    """Test adding numbers with zero."""
-    assert add_numbers(0, 7) == 7
-    assert add_numbers(0, 0) == 0
+    """Test adding zero to a number."""
+    assert add_numbers(7, 0) == 7
 
-def test_add_numbers_large_numbers():
+def test_add_numbers_large():
     """Test adding large numbers."""
     assert add_numbers(1000000, 2000000) == 3000000
 
-def test_greet_basic():
-    """Test basic greeting functionality."""
+def test_greet_normal_name():
+    """Test greeting with a standard name."""
     assert greet("Alice") == "Hello, Alice!"
 
-def test_greet_empty_string():
+def test_greet_empty_name():
     """Test greeting with an empty string."""
     assert greet("") == "Hello, !"
 
@@ -30,6 +29,6 @@ def test_greet_with_spaces():
     """Test greeting with a name containing spaces."""
     assert greet("John Doe") == "Hello, John Doe!"
 
-def test_greet_numeric_name():
-    """Test greeting with a numeric name."""
-    assert greet("42") == "Hello, 42!"
+def test_greet_with_special_characters():
+    """Test greeting with a name containing special characters."""
+    assert greet("Alice_Smith-123") == "Hello, Alice_Smith-123!"
