@@ -32,11 +32,13 @@ def test_greet_empty_name():
     assert greet("") == "Hello, !"
 
 
-def test_greet_with_spaces():
-    """Test greeting with a name containing spaces."""
-    assert greet("John Doe") == "Hello, John Doe!"
-
-
-def test_greet_with_special_characters():
-    """Test greeting with a name containing special characters."""
-    assert greet("Sam-123") == "Hello, Sam-123!"
+def test_greet_with_complex_names():
+    """Test greeting with names containing spaces and special characters."""
+    test_cases = [
+        "John Doe",
+        "Sam-123",
+        "Alice Smith Jr.",
+        "user@example.com"
+    ]
+    for name in test_cases:
+        assert greet(name) == f"Hello, {name}!"
