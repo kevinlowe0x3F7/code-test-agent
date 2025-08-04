@@ -27,7 +27,7 @@ def code_validation(state: State):
     elif state.code_validation_pytest_retry_attempts >= 3:
         return {
             "current_phase": WorkflowPhase.ERROR,
-            "error_message": "Unable to fix the test file during test validation",
+            "error_message": "Unable to fix the test file during code validation after retrying 3 times",
         }
 
     pytest_result = _run_pytest(state.test_file_path)

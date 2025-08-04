@@ -1,4 +1,5 @@
 from agent.workflows.nodes.code_validation import code_validation
+from agent.workflows.nodes.pr_submission import PR_SUBMISSION_NODE, pr_submission
 from agent.workflows.nodes.tool_execution import tool_execution
 from agent.workflows.nodes.error_handler import error_handler
 from agent.workflows.routing import route_after_code_validation
@@ -10,6 +11,7 @@ test_graph = StateGraph(State)
 test_graph.add_node("code_validation", code_validation)
 test_graph.add_node("tool_execution", tool_execution)
 test_graph.add_node("error_handler", error_handler)
+test_graph.add_node(PR_SUBMISSION_NODE, pr_submission)
 
 test_graph.add_edge(START, "code_validation")
 
@@ -19,6 +21,7 @@ test_graph.add_conditional_edges(
     {
         "error_handler": "error_handler",
         "tool_execution": "tool_execution",
+        PR_SUBMISSION_NODE: PR_SUBMISSION_NODE,
         END: END,
     },
 )
