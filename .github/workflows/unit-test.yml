@@ -16,6 +16,7 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  id-token: write
 
 jobs:
   generate-unit-tests:
@@ -97,6 +98,7 @@ jobs:
             Please provide a summary of what you found and what you did at the end.
           allowed_tools: "Bash(git:*,npm:*,yarn:*,python:*,pip:*,go:*,cargo:*,dotnet:*),View,GlobTool,GrepTool,Write,BatchTool"
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.BOT_GITHUB_TOKEN }}
 
       - name: Create pull request with generated tests
         uses: anthropics/claude-code-action@v1
@@ -155,6 +157,7 @@ jobs:
             Only create the PR if tests were actually generated. If no tests were created, explain why.
           allowed_tools: "Bash(git:*,gh:*),View,GlobTool"
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.BOT_GITHUB_TOKEN }}
 
       - name: Report results
         if: always()
