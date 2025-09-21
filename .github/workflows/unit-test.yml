@@ -1,0 +1,195 @@
+name: Unit Test Generation with Claude Code
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      target_directory:
+        description: 'Target directory to scan for files needing tests (optional)'
+        required: false
+        type: string
+        default: 'src'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  generate-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Only needed if your project uses Node.js/npm/yarn
+      # Uncomment if you have a JavaScript/TypeScript project
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '18'
+
+      - name: Find file needing tests and generate them
+        id: generate-tests
+        uses: anthropics/claude-code-action@v1
+        with:
+          prompt: |
+            I need you to find a file in this repository that doesn't have unit tests yet and generate comprehensive tests for it.
+            
+            **Step 1: Analyze the repository structure**
+            1. Scan the codebase (focus on the "${{ github.event.inputs.target_directory || 'src' }}" directory if it exists)
+            2. Identify source code files that should have unit tests (exclude config files, types, interfaces, etc.)
+            3. For each source file, check if corresponding test files exist
+            4. Look for common test patterns like:
+               - `filename.test.js/ts` alongside source files
+               - `__tests__/filename.test.js` directories
+               - `tests/` directory with matching structure
+               - `spec/` directories
+               - Other testing conventions used in this project
+            
+            **Step 2: Select a file for testing**
+            1. Find files that don't have any corresponding test files
+            2. Prioritize files based on:
+               - Complexity and importance (utility functions, core business logic)
+               - File size and number of exported functions
+               - Files that are likely to have bugs or edge cases
+            3. Select ONE file that would benefit most from unit tests
+            4. If all files already have tests, pick one with notably low coverage or outdated tests
+            
+            **Step 3: Generate comprehensive unit tests**
+            If you found a file needing tests:
+            1. Read and understand the CLAUDE.md file for testing standards and guidelines
+            2. Analyze the selected file thoroughly:
+               - Understand its purpose and functionality
+               - Identify all exported functions, classes, and methods
+               - Note dependencies and external integrations
+               - Find edge cases and error conditions
+            3. Generate comprehensive unit tests that cover:
+               - All public methods and functions
+               - Happy path scenarios
+               - Edge cases and boundary conditions
+               - Error handling and exception scenarios
+               - Different input types and validation
+               - Integration points and mocking needs
+            4. Follow the project's existing testing patterns:
+               - Use the same testing framework as other tests
+               - Follow naming conventions and file structure
+               - Use consistent assertion styles and mocking patterns
+               - Match the code style and organization
+            5. Create the test file in the appropriate location
+            6. Ensure tests are well-organized with clear descriptions
+            7. Add necessary imports and setup/teardown code
+            
+            **Step 4: Verify and finalize**
+            1. Run the tests to ensure they pass
+            2. Fix any issues or failing tests
+            3. Verify the tests provide meaningful coverage
+            4. Create a descriptive commit message
+            5. Prepare for pull request creation
+            
+            **If no files need tests:**
+            If all files already have adequate test coverage, report this and suggest improvements to existing tests or mention that the repository has good test coverage.
+            
+            Please provide a summary of what you found and what you did at the end.
+          allowed_tools: "Bash(git:*,npm:*,yarn:*,python:*,pip:*,go:*,cargo:*,dotnet:*),View,GlobTool,GrepTool,Write,BatchTool"
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Create pull request with generated tests
+        uses: anthropics/claude-code-action@v1
+        with:
+          prompt: |
+            Now please create a pull request for the unit tests that were just generated.
+            
+            **Before creating the PR:**
+            1. Review the changes that were made
+            2. Ensure all generated tests pass
+            3. Check that the test file follows project conventions
+            4. Verify the tests provide good coverage of the target file
+            
+            **Create the pull request with:**
+            1. **Clear title** indicating which file got unit tests (e.g., "Add unit tests for src/utils/helper.js")
+            2. **Detailed description** including:
+               - Which file was tested and why it was selected
+               - Summary of test scenarios covered
+               - Any important testing decisions or assumptions
+               - Coverage improvements (if measurable)
+               - Instructions for running the new tests
+            3. **Appropriate labels** such as "tests", "automated", "unit-tests", "enhancement"
+            4. **Assign reviewers** if there are default code reviewers
+            
+            **PR description template:**
+            ```
+            ## 🧪 Automated Unit Test Generation
+            
+            ### File Tested
+            - **Target file:** `[filename]`
+            - **Test file:** `[test filename]`
+            
+            ### Why This File
+            [Explain why this file was selected - no existing tests, high complexity, etc.]
+            
+            ### Test Coverage
+            - ✅ [List key scenarios tested]
+            - ✅ [Edge cases covered]
+            - ✅ [Error conditions tested]
+            
+            ### Testing Approach
+            [Describe mocking strategy, test structure, any special considerations]
+            
+            ### How to Run
+            ```bash
+            [test command for this specific file]
+            ```
+            
+            ### Notes
+            [Any limitations, assumptions, or areas for future improvement]
+            
+            ---
+            *Generated automatically by Claude Code on [date]*
+            ```
+            
+            Only create the PR if tests were actually generated. If no tests were created, explain why.
+          allowed_tools: "Bash(git:*,gh:*),View,GlobTool"
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Report results
+        if: always()
+        run: |
+          echo "## 🧪 Daily Unit Test Generation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Directory:** ${{ github.event.inputs.target_directory || 'src (default)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if any test files were created
+          if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E '\.(test|spec)\.' > /dev/null; then
+            echo "### ✅ Success" >> $GITHUB_STEP_SUMMARY
+            echo "- 🎯 **File analyzed:** Claude Code identified a file needing tests" >> $GITHUB_STEP_SUMMARY
+            echo "- 🧪 **Tests generated:** Unit tests created and verified" >> $GITHUB_STEP_SUMMARY
+            echo "- 📝 **Pull request:** Created and ready for review" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📁 Files Modified" >> $GITHUB_STEP_SUMMARY
+            git diff --name-only HEAD~1 HEAD 2>/dev/null | while read file; do
+              echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+            done
+          else
+            echo "### ℹ️ No Tests Generated" >> $GITHUB_STEP_SUMMARY
+            echo "This could mean:" >> $GITHUB_STEP_SUMMARY
+            echo "- 🎉 All files already have adequate test coverage" >> $GITHUB_STEP_SUMMARY
+            echo "- 🔍 No suitable files found in the target directory" >> $GITHUB_STEP_SUMMARY
+            echo "- ⚠️ An issue occurred during generation" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the action logs for more details." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Review** the generated pull request if one was created" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Test** the new unit tests locally" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Merge** after approval to improve test coverage" >> $GITHUB_STEP_SUMMARY
+          echo "4. **Monitor** tomorrow's run for the next file" >> $GITHUB_STEP_SUMMARY
